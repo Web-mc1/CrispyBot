@@ -1,2 +1,2 @@
 # CrispyBot
-discord bot for dc
+discord bot for CrispySprings
