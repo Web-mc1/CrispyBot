@@ -2,7 +2,7 @@
 // 1) Set ORIGIN below to your GitHub Pages origin (no path, no trailing slash).
 // 2) Cloudflare dashboard > Workers & Pages > Create > Hello World > paste this > Deploy.
 // 3) Paste the worker URL (https://NAME.USER.workers.dev) into the "API proxy URL" box on the site.
-const ORIGIN = 'https://YOURNAME.github.io';
+const ORIGIN = 'https://Web-mc1.github.io';
 const GUILD = '1541009615167422514';
 export default {
   async fetch(req) {
