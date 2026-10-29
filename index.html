@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bot Console</title>
+<style>
+:root{--bg:#14161b;--p1:#1b1e25;--p2:#22262f;--line:#2e333f;--tx:#e7e9ee;--mut:#8b91a1;--ac:#f2b630;--acx:#1a1400;--red:#e5534b}
+@media (prefers-color-scheme:light){:root{--bg:#eceef2;--p1:#f7f8fa;--p2:#fff;--line:#d5d9e2;--tx:#1b1e25;--mut:#5d6475;--ac:#c98a00;--acx:#fff}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--tx);font:15px/1.45 "Segoe UI",system-ui,sans-serif}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:var(--p2);border:1px solid var(--line);border-radius:6px;padding:5px 10px}
+button:hover{border-color:var(--ac)}button.pri{background:var(--ac);color:var(--acx);border-color:var(--ac);font-weight:600}
+:focus-visible{outline:2px solid var(--ac);outline-offset:1px}
+#login{display:grid;place-items:center;height:100%;padding:16px}
+#login form{width:min(420px,100%);background:var(--p1);border:1px solid var(--line);border-radius:10px;padding:24px;display:grid;gap:12px}
+#login h1{margin:0;font-size:22px}#login p{margin:0;color:var(--mut);font-size:13px}
+input[type=password],input[type=text],textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+#err{color:var(--red);min-height:1.2em;font-size:13px}
+#app{display:none;height:100%;grid-template-columns:64px 220px 1fr 210px}
+#app.on{display:grid}
+#app.nomem{grid-template-columns:64px 220px 1fr}#app.nomem #mem{display:none}
+#rail{background:var(--bg);border-right:1px solid var(--line);overflow:auto;display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 0}
+#rail button{width:44px;height:44px;border-radius:14px;padding:0;overflow:hidden;font-weight:700}
+#rail button.sel{border-color:var(--ac);box-shadow:0 0 0 2px var(--ac)}
+#rail img{width:100%;height:100%;object-fit:cover}
+#side,#mem{background:var(--p1);overflow:auto;border-right:1px solid var(--line)}
+#mem{border:0;border-left:1px solid var(--line);padding:10px}
+#side h2{font-size:15px;margin:0;padding:12px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--p1)}
+.cat{color:var(--mut);font-size:12px;font-weight:600;padding:12px 12px 4px}
+.ch{display:block;width:calc(100% - 12px);margin:1px 6px;text-align:left;border:0;background:none;color:var(--mut)}
+.ch:hover,.ch.sel{background:var(--p2);color:var(--tx)}
+#me{position:sticky;bottom:0;background:var(--p2);padding:8px 12px;border-top:1px solid var(--line);font-size:13px;display:flex;gap:8px;align-items:center}
+#main{display:flex;flex-direction:column;min-width:0;height:100%}
+#top{padding:10px 14px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;gap:8px;align-items:center}
+#msgs{flex:1;overflow:auto;padding:8px 0}
+.m{display:grid;grid-template-columns:40px 1fr;gap:10px;padding:4px 14px;position:relative}
+.m:hover{background:var(--p1)}
+.av{width:40px;height:40px;border-radius:50%;background:var(--p2);object-fit:cover}
+.hd b{margin-right:6px}.hd time,.ref{color:var(--mut);font-size:12px}
+.bot{background:var(--ac);color:var(--acx);border-radius:4px;font-size:11px;padding:0 4px;margin-right:6px;font-weight:700}
+.ref{grid-column:2;border-left:3px solid var(--line);padding-left:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.body{overflow-wrap:anywhere;white-space:pre-wrap}
+.body code{background:var(--p2);border-radius:4px;padding:0 4px;font-family:ui-monospace,Consolas,monospace;font-size:13px}
+.body pre{background:var(--p2);padding:8px;border-radius:6px;overflow:auto;margin:4px 0}
+.mn{background:#5865f233;color:#8ea1ff;border-radius:4px;padding:0 3px}
+.body a{color:var(--ac)}.ce{height:1.4em;vertical-align:middle}
+.emb{border-left:4px solid var(--line);background:var(--p2);border-radius:4px;padding:8px 10px;margin-top:4px;max-width:480px;white-space:pre-wrap}
+.emb img,.att img{max-width:100%;max-height:300px;border-radius:6px;margin-top:6px;display:block}
+.rx{display:inline-flex;gap:4px;margin:4px 4px 0 0;padding:1px 8px;border-radius:12px;font-size:13px}
+.rx.me{border-color:var(--ac)}
+.acts{position:absolute;right:14px;top:-10px;display:none;gap:4px;background:var(--p1)}
+.m:hover .acts{display:flex}.acts button{padding:1px 7px;font-size:13px}
+#comp{border-top:1px solid var(--line);padding:10px 14px;display:grid;gap:6px}
+#rep{display:none;justify-content:space-between;font-size:13px;color:var(--mut)}
+#rep.on{display:flex}
+#row{display:flex;gap:6px;align-items:flex-end}#row textarea{resize:none;max-height:140px}
+.mem{display:flex;gap:8px;align-items:center;padding:3px 0;font-size:13px}.mem img{width:24px;height:24px;border-radius:50%}
+.sec{color:var(--mut);font-size:12px;font-weight:600;margin:8px 0 2px}
+@media(max-width:820px){#app{grid-template-columns:56px 150px 1fr}#mem{display:none}}
+</style>
+</head>
+<body>
+<div id="login">
+  <form id="lf">
+    <h1>Bot Console</h1>
+    <p>Paste your bot token. It stays in this browser and is sent only to discord.com. Nothing is saved to GitHub.</p>
+    <input id="tok" type="password" placeholder="Bot token" autocomplete="off" required>
+    <label><input id="rem" type="checkbox"> Remember on this device</label>
+    <div id="err" role="alert"></div>
+    <button class="pri">Log in as bot</button>
+  </form>
+</div>
+<div id="app">
+  <nav id="rail" aria-label="Servers"></nav>
+  <aside id="side"></aside>
+  <section id="main">
+    <div id="top"><b id="ctitle">Pick a channel</b><span><button id="tm">Members</button> <button id="rf">Refresh</button></span></div>
+    <div id="msgs"></div>
+    <div id="comp">
+      <div id="rep"><span id="rept"></span><button id="repx">Cancel</button></div>
+      <div id="row">
+        <button id="up" title="Attach a file">+</button><input id="file" type="file" hidden>
+        <textarea id="in" rows="1" placeholder="Message as the bot (Enter to send, Shift+Enter for new line)" disabled></textarea>
+        <button class="pri" id="send" disabled>Send</button>
+      </div>
+      <small id="fn" style="color:var(--mut)"></small>
+    </div>
+  </section>
+  <aside id="mem"></aside>
+</div>
+<script>
+const API='https://discord.com/api/v10';
+let token='',me=null,gid=null,cid=null,guilds=[],members=new Map(),channels=[],replyTo=null,sig='',timer=null;
+const $=s=>document.querySelector(s),sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+async function api(path,opt={}){
+  const h={Authorization:'Bot '+token,...(opt.headers||{})};
+  const r=await fetch(API+path,{...opt,headers:h});
+  if(r.status===429){const j=await r.json().catch(()=>({}));await sleep((j.retry_after||1)*1000);return api(path,opt);}
+  if(!r.ok){let t='';try{t=(await r.json()).message}catch{}throw new Error(r.status+' '+(t||r.statusText));}
+  return r.status===204?null:r.json();
+}
+const jpost=(p,b,m='POST')=>api(p,{method:m,headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});
+const avatar=(u,sz=64)=>u.avatar?`https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.png?size=${sz}`:`https://cdn.discordapp.com/embed/avatars/${(BigInt(u.id)>>22n)%6n}.png`;
+const nm=u=>members.get(u.id)?.nick||u.global_name||u.username;
+
+async function login(t,remember){
+  token=t.trim();
+  me=await api('/users/@me');
+  (remember?localStorage:sessionStorage).setItem('bt',token);
+  if(!remember)localStorage.removeItem('bt');
+  $('#login').style.display='none';$('#app').classList.add('on');
+  $('#me').remove?.();
+  guilds=await api('/users/@me/guilds');
+  renderRail();
+  if(guilds[0])openGuild(guilds[0].id);
+}
+function renderRail(){
+  $('#rail').innerHTML='';
+  for(const g of guilds){
+    const b=document.createElement('button');b.title=g.name;b.dataset.id=g.id;
+    b.innerHTML=g.icon?`<img alt="${esc(g.name)}" src="https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=96">`:esc(g.name.slice(0,2));
+    b.onclick=()=>openGuild(g.id);$('#rail').append(b);
+  }
+}
+async function openGuild(id){
+  gid=id;cid=null;clearInterval(timer);
+  document.querySelectorAll('#rail button').forEach(b=>b.classList.toggle('sel',b.dataset.id===id));
+  $('#msgs').innerHTML='';$('#ctitle').textContent='Pick a channel';$('#in').disabled=$('#send').disabled=true;
+  const [chs,roles]=await Promise.all([api(`/guilds/${id}/channels`),api(`/guilds/${id}/roles`)]);
+  channels=chs;window.roles=new Map(roles.map(r=>[r.id,r]));
+  const g=guilds.find(x=>x.id===id);
+  let h=`<h2>${esc(g.name)}</h2>`;
+  const text=channels.filter(c=>c.type===0||c.type===5).sort((a,b)=>a.position-b.position);
+  const cats=channels.filter(c=>c.type===4).sort((a,b)=>a.position-b.position);
+  const grp=(label,list)=>{if(!list.length)return;h+=`<div class="cat">${esc(label)}</div>`;for(const c of list)h+=`<button class="ch" data-id="${c.id}"># ${esc(c.name)}</button>`;};
+  grp('No category',text.filter(c=>!c.parent_id));
+  for(const k of cats)grp(k.name,text.filter(c=>c.parent_id===k.id));
+  $('#side').innerHTML=h+`<div id="me"><img class="av" style="width:28px;height:28px" src="${avatar(me,32)}" alt=""><span>${esc(me.username)}</span><button id="out" style="margin-left:auto">Log out</button></div>`;
+  $('#out').onclick=()=>{localStorage.removeItem('bt');sessionStorage.removeItem('bt');location.reload()};
+  document.querySelectorAll('.ch').forEach(b=>b.onclick=()=>openChannel(b.dataset.id));
+  loadMembers();
+}
+async function loadMembers(){
+  members=new Map();
+  try{
+    const list=await api(`/guilds/${gid}/members?limit=1000`);
+    for(const m of list)members.set(m.user.id,{...m.user,nick:m.nick,roles:m.roles});
+    const bots=[...members.values()].filter(u=>u.bot),hum=[...members.values()].filter(u=>!u.bot);
+    const row=u=>`<div class="mem"><img src="${avatar(u,32)}" alt="">${esc(u.nick||u.global_name||u.username)}</div>`;
+    $('#mem').innerHTML=`<div class="sec">Members (${hum.length})</div>${hum.map(row).join('')}<div class="sec">Bots (${bots.length})</div>${bots.map(row).join('')}`;
+  }catch(e){$('#mem').innerHTML=`<div class="sec">Member list unavailable: ${esc(e.message)}</div>`}
+}
+async function openChannel(id){
+  cid=id;sig='';setReply(null);
+  const c=channels.find(x=>x.id===id);
+  document.querySelectorAll('.ch').forEach(b=>b.classList.toggle('sel',b.dataset.id===id));
+  $('#ctitle').textContent='# '+c.name;$('#in').disabled=$('#send').disabled=false;
+  $('#msgs').innerHTML='';clearInterval(timer);
+  await poll(true);timer=setInterval(()=>poll(false),3000);
+}
+function md(s){
+  let t=esc(s);
+  const code=[];
+  t=t.replace(/```(?:\w+\n)?([\s\S]*?)```/g,(_,c)=>{code.push(`<pre>${c}</pre>`);return`\u0000${code.length-1}\u0000`});
+  t=t.replace(/`([^`\n]+)`/g,(_,c)=>{code.push(`<code>${c}</code>`);return`\u0000${code.length-1}\u0000`});
+  t=t.replace(/&lt;@!?(\d+)&gt;/g,(_,i)=>{const u=members.get(i);return`<span class="mn">@${esc(u?(u.nick||u.global_name||u.username):'user')}</span>`})
+   .replace(/&lt;@&amp;(\d+)&gt;/g,(_,i)=>`<span class="mn">@${esc(window.roles?.get(i)?.name||'role')}</span>`)
+   .replace(/&lt;#(\d+)&gt;/g,(_,i)=>`<span class="mn">#${esc(channels.find(c=>c.id===i)?.name||'channel')}</span>`)
+   .replace(/&lt;a?:(\w+):(\d+)&gt;/g,(_,n,i)=>`<img class="ce" alt=":${n}:" src="https://cdn.discordapp.com/emojis/${i}.png?size=48">`)
+   .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>').replace(/(^|\W)\*([^*\n]+)\*/g,'$1<i>$2</i>').replace(/__([^_]+)__/g,'<u>$1</u>').replace(/~~([^~]+)~~/g,'<s>$1</s>')
+   .replace(/(https?:\/\/[^\s<]+)/g,'<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  return t.replace(/\u0000(\d+)\u0000/g,(_,i)=>code[i]);
+}
+function msgHtml(m){
+  const au=m.author,who=esc(nm(au));
+  const refm=m.referenced_message;
+  let h=`<div class="m" data-id="${m.id}">`;
+  if(m.message_reference)h+=`<div class="ref">↩ ${refm?`<b>${esc(nm(refm.author))}</b> ${esc((refm.content||'(attachment)').slice(0,90))}`:'original message unavailable'}</div>`;
+  h+=`<img class="av" src="${avatar(au)}" alt=""><div><div class="hd"><b>${who}</b>${au.bot?'<span class="bot">BOT</span>':''}<time>${new Date(m.timestamp).toLocaleString()}${m.edited_timestamp?' (edited)':''}</time></div>`;
+  if(m.content)h+=`<div class="body">${md(m.content)}</div>`;
+  for(const a of m.attachments||[])h+=/^image\//.test(a.content_type||'')?`<div class="att"><img src="${esc(a.url)}" alt="${esc(a.filename)}"></div>`:`<div class="att"><a href="${esc(a.url)}" target="_blank" rel="noopener noreferrer">📎 ${esc(a.filename)}</a></div>`;
+  for(const e of m.embeds||[]){
+    h+=`<div class="emb" style="border-color:${e.color!=null?'#'+e.color.toString(16).padStart(6,'0'):'var(--line)'}">`;
+    if(e.title)h+=`<b>${esc(e.title)}</b>\n`;
+    if(e.description)h+=`<div>${md(e.description)}</div>`;
+    for(const f of e.fields||[])h+=`<div><b>${esc(f.name)}</b>\n${md(f.value)}</div>`;
+    const img=e.image?.url||e.thumbnail?.url;if(img)h+=`<img src="${esc(img)}" alt="">`;
+    h+='</div>';
+  }
+  for(const s of m.sticker_items||[])h+=`<div class="body">[sticker: ${esc(s.name)}]</div>`;
+  for(const r of m.reactions||[]){
+    const key=r.emoji.id?`${r.emoji.name}:${r.emoji.id}`:r.emoji.name;
+    const face=r.emoji.id?`<img class="ce" alt="" src="https://cdn.discordapp.com/emojis/${r.emoji.id}.png?size=32">`:esc(r.emoji.name);
+    h+=`<button class="rx${r.me?' me':''}" data-k="${esc(key)}">${face} ${r.count}</button>`;
+  }
+  h+=`</div><div class="acts"><button data-a="reply">Reply</button><button data-a="react">React</button>${au.id===me.id?'<button data-a="edit">Edit</button>':''}<button data-a="del">Delete</button></div></div>`;
+  return h;
+}
+let cache=[];
+async function poll(first){
+  if(!cid)return;const at=cid;
+  let list;try{list=(await api(`/channels/${at}/messages?limit=50`)).reverse();}catch(e){if(first)$('#msgs').innerHTML=`<div class="m"><div class="body">Can't read this channel: ${esc(e.message)}</div></div>`;return;}
+  if(at!==cid)return;
+  const s=list.map(m=>m.id+(m.edited_timestamp||'')+(m.reactions||[]).map(r=>r.count+(r.me?'m':'')).join('')).join('|');
+  if(s===sig)return;sig=s;cache=list;
+  const box=$('#msgs'),near=box.scrollHeight-box.scrollTop-box.clientHeight<120||first;
+  box.innerHTML=list.map(msgHtml).join('')||'<div class="m"><div class="body">No messages yet.</div></div>';
+  if(near)box.scrollTop=box.scrollHeight;
+}
+$('#msgs').onclick=async e=>{
+  const el=e.target.closest('.m');if(!el)return;
+  const id=el.dataset.id,m=cache.find(x=>x.id===id),b=e.target.closest('button');if(!b||!m)return;
+  const base=`/channels/${cid}/messages/${id}`;
+  try{
+    if(b.classList.contains('rx')){
+      const em=encodeURIComponent(b.dataset.k),mine=b.classList.contains('me');
+      await api(`${base}/reactions/${em}/@me`,{method:mine?'DELETE':'PUT'});
+    }else if(b.dataset.a==='reply')setReply(m);
+    else if(b.dataset.a==='react'){const em=prompt('Emoji to react with (e.g. 👍):');if(em)await api(`${base}/reactions/${encodeURIComponent(em.trim())}/@me`,{method:'PUT'});}
+    else if(b.dataset.a==='edit'){const t=prompt('Edit message:',m.content);if(t!=null)await jpost(base,{content:t},'PATCH');}
+    else if(b.dataset.a==='del'){if(confirm('Delete this message?'))await api(base,{method:'DELETE'});}
+    sig='';poll(false);
+  }catch(err){alert(err.message)}
+};
+function setReply(m){
+  replyTo=m;$('#rep').classList.toggle('on',!!m);
+  if(m)$('#rept').textContent='Replying to '+nm(m.author)+': '+(m.content||'(attachment)').slice(0,60);
+}
+$('#repx').onclick=()=>setReply(null);
+function mentions(t){
+  return t.replace(/(^|\s)@([\w.]{2,32})/g,(all,pre,n)=>{
+    const l=n.toLowerCase();
+    for(const u of members.values())if([u.username,u.global_name,u.nick].some(x=>x&&x.toLowerCase()===l))return`${pre}<@${u.id}>`;
+    return all;
+  });
+}
+async function send(){
+  const raw=$('#in').value.trim(),f=$('#file').files[0];
+  if((!raw&&!f)||!cid)return;
+  const body={content:mentions(raw),allowed_mentions:{parse:['users','roles'],replied_user:true}};
+  if(replyTo)body.message_reference={message_id:replyTo.id,fail_if_not_exists:false};
+  $('#send').disabled=true;
+  try{
+    if(f){const fd=new FormData();fd.append('payload_json',JSON.stringify(body));fd.append('files[0]',f,f.name);await api(`/channels/${cid}/messages`,{method:'POST',body:fd});}
+    else await jpost(`/channels/${cid}/messages`,body);
+    $('#in').value='';$('#file').value='';$('#fn').textContent='';setReply(null);sig='';await poll(false);
+    $('#msgs').scrollTop=$('#msgs').scrollHeight;
+  }catch(e){alert('Could not send: '+e.message)}
+  $('#send').disabled=false;$('#in').focus();
+}
+$('#send').onclick=send;
+$('#in').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send()}};
+$('#up').onclick=()=>$('#file').click();
+$('#file').onchange=()=>$('#fn').textContent=$('#file').files[0]?'Attached: '+$('#file').files[0].name:'';
+$('#rf').onclick=()=>{sig='';poll(false)};
+$('#tm').onclick=()=>$('#app').classList.toggle('nomem');
+$('#lf').onsubmit=async e=>{
+  e.preventDefault();$('#err').textContent='';
+  try{await login($('#tok').value,$('#rem').checked)}catch(x){$('#err').textContent='Login failed: '+x.message}
+};
+const saved=localStorage.getItem('bt')||sessionStorage.getItem('bt');
+if(saved)login(saved,!!localStorage.getItem('bt')).catch(()=>{localStorage.removeItem('bt');sessionStorage.removeItem('bt')});
+</script>
+</body>
+</html>
